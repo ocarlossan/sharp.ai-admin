@@ -1,7 +1,6 @@
-// URL do backend — definida em build via VITE_API_URL no EasyPanel.
-export const API_URL =
-  (import.meta as any).env?.VITE_API_URL ||
-  'https://apps-sharp-ai-backend.jyo3rb.easypanel.host/api';
+// Em produção usa caminho relativo /api — o nginx do admin faz proxy pro backend
+// (evita CORS, o navegador só fala com o domínio do admin).
+export const API_URL = (import.meta as any).env?.VITE_API_URL || '/api';
 
 const TOKEN_KEY = 'sharp_admin_token';
 
