@@ -447,7 +447,7 @@ function Bilhetes() {
                   <div style={{ flex: 1, minWidth: 160 }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{t.user}</div>
                     <div style={{ fontSize: 12, color: T.textMid, marginTop: 2 }}>{(t.games || []).map((g: any) => `${g.home} x ${g.away}`).join(' · ')}</div>
-                    <div style={{ fontSize: 11, color: T.textDim, marginTop: 2 }}>{t.competition} · {new Date(t.createdAt).toLocaleDateString('pt-BR')}</div>
+                    <div style={{ fontSize: 11, color: T.textDim, marginTop: 2 }}>{t.competition} · {new Date(t.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
                   <Badge text={RISK_LABEL[t.risk] || t.risk} color={RISK_COLORS[t.risk] || T.textDim} />
                   <Badge text={tipo.label} color={tipo.color} />
