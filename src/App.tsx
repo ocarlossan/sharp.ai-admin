@@ -410,9 +410,18 @@ const STATUS_CFG: Record<string, { label: string; color: string }> = {
   indefinido: { label: 'Indefinido', color: T.textDim },
 };
 
+// Cores do risco (iguais ao app)
+const RISK_COLORS: Record<string, string> = { conservador: '#16A34A', moderado: '#F59E0B', agressivo: '#EF4444' };
+const RISK_LABEL: Record<string, string> = { conservador: 'Conservador', moderado: 'Moderado', agressivo: 'Agressivo' };
+function tipoAposta(games: any[]): { label: string; color: string } {
+  const live = (games || []).some((g: any) => g?.gameStatus === 'live');
+  return live ? { label: '● Ao vivo', color: '#EF4444' } : { label: 'Pré-jogo', color: '#3B82F6' };
+}
+
 function Bilhetes() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [openId, setOpenId] = useState<string | null>(null);
   const { data, loading } = useFetch<any>(`/admin/tickets?status=${status}&page=${page}`);
   return (
     <>
@@ -426,17 +435,48 @@ function Bilhetes() {
         ))}
       </div>
       {loading || !data ? <Loading /> : (
-        <div style={card()}>
-          <Table
-            cols={['Usuário', 'Jogos', 'Competição', 'Risco', 'Odd', 'Status', 'Data']}
-            rows={data.tickets.map((t: any) => [
-              t.user,
-              <div style={{ fontSize: 13 }}>{(t.games || []).map((g: any) => `${g.home} x ${g.away}`).join(', ')}</div>,
-              t.competition, t.risk, <strong>{t.oddTotal}</strong>,
-              <Badge text={STATUS_CFG[t.status]?.label || t.status} color={STATUS_CFG[t.status]?.color || T.textDim} />,
-              new Date(t.createdAt).toLocaleDateString('pt-BR'),
-            ])}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {data.tickets.map((t: any) => {
+            const tipo = tipoAposta(t.games);
+            const aberto = openId === t.id;
+            const entries: any[] = t.entries || [];
+            return (
+              <div key={t.id} style={{ ...card(), padding: 0, overflow: 'hidden' }}>
+                {/* Linha clicável */}
+                <div onClick={() => setOpenId(aberto ? null : t.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, cursor: 'pointer', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{t.user}</div>
+                    <div style={{ fontSize: 12, color: T.textMid, marginTop: 2 }}>{(t.games || []).map((g: any) => `${g.home} x ${g.away}`).join(' · ')}</div>
+                    <div style={{ fontSize: 11, color: T.textDim, marginTop: 2 }}>{t.competition} · {new Date(t.createdAt).toLocaleDateString('pt-BR')}</div>
+                  </div>
+                  <Badge text={RISK_LABEL[t.risk] || t.risk} color={RISK_COLORS[t.risk] || T.textDim} />
+                  <Badge text={tipo.label} color={tipo.color} />
+                  <Badge text={STATUS_CFG[t.status]?.label || t.status} color={STATUS_CFG[t.status]?.color || T.textDim} />
+                  <div style={{ textAlign: 'right', minWidth: 56 }}>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: T.accent }}>{t.oddTotal}</div>
+                    <div style={{ fontSize: 9, color: T.textDim, letterSpacing: 1 }}>ODD</div>
+                  </div>
+                  <span style={{ color: T.textDim, fontSize: 13 }}>{aberto ? '▲' : '▼'}</span>
+                </div>
+                {/* Entradas do bilhete (o que o cliente apostou) */}
+                {aberto && (
+                  <div style={{ borderTop: `1px solid ${T.border}`, padding: 14, background: T.surface2 }}>
+                    {entries.length === 0 ? (
+                      <div style={{ fontSize: 12, color: T.textDim }}>Sem entradas neste bilhete.</div>
+                    ) : entries.map((e: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: i < entries.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{e.selecao}</div>
+                          <div style={{ fontSize: 11, color: T.textMid, textTransform: 'uppercase' }}>{e.mercado}{e.jogo ? ` · ${e.jogo}` : ''}</div>
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: T.accent }}>{e.odd_estimada}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <Pager page={page} total={data.total} perPage={data.perPage} onPage={setPage} />
         </div>
       )}
