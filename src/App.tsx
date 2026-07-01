@@ -41,11 +41,11 @@ function Login({ onLogin }: { onLogin: () => void }) {
       <form onSubmit={submit} style={{ width: '100%', maxWidth: 380, background: T.surface, borderRadius: 16, padding: 32, border: `1px solid ${T.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Logo />
-          <span style={{ fontSize: 20, fontWeight: 800 }}>Sharp.ai</span>
+          <span style={{ fontSize: 20, fontWeight: 800 }}>Sharp<span style={{ color: T.accent }}>Ai</span></span>
           <span style={{ fontSize: 11, fontWeight: 700, color: T.accent, background: T.accentSoft, padding: '2px 8px', borderRadius: 6 }}>ADMIN</span>
         </div>
         <p style={{ color: T.textMid, fontSize: 13, marginBottom: 24 }}>Acesso restrito ao administrador</p>
-        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="admin@sharp.ai" />
+        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="admin@sharpai.pro" />
         <Field label="Senha" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
         {error && <div style={{ color: T.red, fontSize: 13, marginBottom: 12 }}>{error}</div>}
         <button type="submit" disabled={loading} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: T.accent, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
@@ -72,7 +72,10 @@ function Field({ label, type, value, onChange, placeholder }: any) {
 function Logo() {
   return (
     <div style={{ width: 30, height: 30, borderRadius: 8, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 12, height: 12, background: '#fff', transform: 'rotate(45deg)', borderRadius: 2 }} />
+      <svg width="18" height="18" viewBox="0 0 40 40">
+        <polyline points="12,23 20,15 28,23" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="12,30 20,22 28,30" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+      </svg>
     </div>
   );
 }
@@ -94,7 +97,7 @@ function Shell() {
       <aside style={{ width: 220, background: T.surface, borderRight: `1px solid ${T.border}`, padding: 16, position: 'sticky', top: 0, height: '100vh' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28, padding: '4px 8px' }}>
           <Logo />
-          <span style={{ fontSize: 16, fontWeight: 800 }}>Sharp.ai</span>
+          <span style={{ fontSize: 16, fontWeight: 800 }}>Sharp<span style={{ color: T.accent }}>Ai</span></span>
           <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: T.accentSoft, padding: '2px 6px', borderRadius: 5 }}>ADMIN</span>
         </div>
         {TABS.map((t) => (
