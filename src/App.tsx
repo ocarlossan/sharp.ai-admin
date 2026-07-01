@@ -185,7 +185,7 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
 }
 
 // ─── Helpers de UI ──────────────────────────────────────────────────
-const card: React.CSSProperties = { background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20 };
+const card = (): React.CSSProperties => ({ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20 });
 
 function H1({ children }: any) {
   return <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 20 }}>{children}</h1>;
@@ -193,7 +193,7 @@ function H1({ children }: any) {
 
 function Stat({ label, value, color, sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
-    <div style={card}>
+    <div style={card()}>
       <div style={{ fontSize: 11, color: T.textDim, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 800, color: color || T.text, marginTop: 6 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: T.textMid, marginTop: 2 }}>{sub}</div>}
@@ -220,7 +220,7 @@ function useFetch<T>(path: string): { data: T | null; loading: boolean; error: s
 
 function Loading() { return <div style={{ color: T.textMid, padding: 40 }}>Carregando...</div>; }
 
-const tooltipStyle = { background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.text, fontSize: 12 };
+const tooltipStyle = () => ({ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.text, fontSize: 12 });
 
 // ─── Dashboard ──────────────────────────────────────────────────────
 function Dashboard() {
@@ -238,7 +238,7 @@ function Dashboard() {
       </div>
       {ch && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div style={card}>
+          <div style={card()}>
             <ChartTitle>Bilhetes por dia (30d)</ChartTitle>
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={ch.days}>
@@ -251,31 +251,31 @@ function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
                 <XAxis dataKey="label" stroke={T.textDim} fontSize={10} interval={4} />
                 <YAxis stroke={T.textDim} fontSize={10} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle()} />
                 <Area type="monotone" dataKey="tickets" stroke={T.accent} fill="url(#g1)" strokeWidth={2} name="Bilhetes" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div style={card}>
+          <div style={card()}>
             <ChartTitle>Novos usuários por dia (30d)</ChartTitle>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={ch.days}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
                 <XAxis dataKey="label" stroke={T.textDim} fontSize={10} interval={4} />
                 <YAxis stroke={T.textDim} fontSize={10} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle()} />
                 <Bar dataKey="signups" fill={T.blue} radius={[4, 4, 0, 0]} name="Cadastros" />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div style={{ ...card, gridColumn: '1 / -1' }}>
+          <div style={{ ...card(), gridColumn: '1 / -1' }}>
             <ChartTitle>Ganhos vs Perdas por dia</ChartTitle>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={ch.days}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
                 <XAxis dataKey="label" stroke={T.textDim} fontSize={10} interval={4} />
                 <YAxis stroke={T.textDim} fontSize={10} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle()} />
                 <Line type="monotone" dataKey="won" stroke={T.green} strokeWidth={2} name="Ganhou" dot={false} />
                 <Line type="monotone" dataKey="lost" stroke={T.red} strokeWidth={2} name="Perdeu" dot={false} />
               </LineChart>
@@ -299,34 +299,34 @@ function Precisao() {
     <>
       <H1>Precisão dos usuários</H1>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        <div style={card}>
+        <div style={card()}>
           <ChartTitle>Distribuição por faixa de acerto</ChartTitle>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.distribution}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
               <XAxis dataKey="faixa" stroke={T.textDim} fontSize={11} />
               <YAxis stroke={T.textDim} fontSize={10} allowDecimals={false} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip contentStyle={tooltipStyle()} />
               <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Usuários">
                 {data.distribution.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div style={card}>
+        <div style={card()}>
           <ChartTitle>Top 8 usuários por precisão</ChartTitle>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.users.slice(0, 8)} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
               <XAxis type="number" stroke={T.textDim} fontSize={10} domain={[0, 100]} />
               <YAxis type="category" dataKey="name" stroke={T.textDim} fontSize={10} width={90} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip contentStyle={tooltipStyle()} />
               <Bar dataKey="precision" fill={T.accent} radius={[0, 4, 4, 0]} name="Precisão %" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
-      <div style={card}>
+      <div style={card()}>
         <ChartTitle>Ranking completo</ChartTitle>
         <Table
           cols={['Usuário', 'Plano', 'Bilhetes', 'Ganhou', 'Perdeu', 'Precisão']}
@@ -370,7 +370,7 @@ function Usuarios() {
         style={{ width: '100%', maxWidth: 360, padding: 11, borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.text, fontSize: 14, marginBottom: 16, outline: 'none' }}
       />
       {loading || !data ? <Loading /> : (
-        <div style={card}>
+        <div style={card()}>
           <Table
             cols={['Usuário', 'Plano', 'Bilhetes', 'Indicados', 'Cadastro', 'Ações']}
             rows={data.users.map((u: any) => [
@@ -378,7 +378,7 @@ function Usuarios() {
                 <div style={{ fontWeight: 600 }}>{u.name} {u.isAdmin && <Badge text="ADMIN" color={T.purple} />}</div>
                 <div style={{ fontSize: 11, color: T.textDim }}>{u.email}</div>
               </div>,
-              <select value={u.plan} onChange={(e) => toggle(u.id, 'plan', e.target.value)} style={selStyle}>
+              <select value={u.plan} onChange={(e) => toggle(u.id, 'plan', e.target.value)} style={selStyle()}>
                 <option value="free">Free</option><option value="pro">Pro</option>
               </select>,
               u.tickets, u.referrals,
@@ -396,7 +396,7 @@ function Usuarios() {
   );
 }
 
-const selStyle: React.CSSProperties = { padding: '6px 8px', borderRadius: 7, border: `1px solid ${T.border}`, background: T.bg, color: T.text, fontSize: 12 };
+const selStyle = (): React.CSSProperties => ({ padding: '6px 8px', borderRadius: 7, border: `1px solid ${T.border}`, background: T.bg, color: T.text, fontSize: 12 });
 function btnSm(color: string): React.CSSProperties {
   return { padding: '5px 9px', borderRadius: 7, border: `1px solid ${color}55`, background: 'transparent', color, fontSize: 11, fontWeight: 600, cursor: 'pointer' };
 }
@@ -426,7 +426,7 @@ function Bilhetes() {
         ))}
       </div>
       {loading || !data ? <Loading /> : (
-        <div style={card}>
+        <div style={card()}>
           <Table
             cols={['Usuário', 'Jogos', 'Competição', 'Risco', 'Odd', 'Status', 'Data']}
             rows={data.tickets.map((t: any) => [
@@ -457,21 +457,21 @@ function DesempenhoIA() {
         <Stat label="Erros" value={data.overall.misses} color={T.red} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
-        <div style={card}>
+        <div style={card()}>
           <ChartTitle>Taxa de acerto por mercado</ChartTitle>
           <ResponsiveContainer width="100%" height={Math.max(240, data.markets.length * 32)}>
             <BarChart data={data.markets} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
               <XAxis type="number" stroke={T.textDim} fontSize={10} domain={[0, 100]} />
               <YAxis type="category" dataKey="market" stroke={T.textDim} fontSize={10} width={130} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip contentStyle={tooltipStyle()} />
               <Bar dataKey="rate" radius={[0, 4, 4, 0]} name="Acerto %">
                 {data.markets.map((m: any, i: number) => <Cell key={i} fill={precColor(m.rate)} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div style={card}>
+        <div style={card()}>
           <ChartTitle>Volume acertos x erros</ChartTitle>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
@@ -479,12 +479,12 @@ function DesempenhoIA() {
                 dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
                 <Cell fill={T.green} /><Cell fill={T.red} />
               </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip contentStyle={tooltipStyle()} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
-      <div style={{ ...card, marginTop: 16 }}>
+      <div style={{ ...card(), marginTop: 16 }}>
         <Table
           cols={['Mercado', 'Acertos', 'Erros', 'Total', 'Taxa']}
           rows={data.markets.map((m: any) => [
@@ -510,7 +510,7 @@ function Financeiro() {
         <Stat label="Comissões pagas" value={`R$ ${data.comissoesTotal}`} color={T.amber} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        <div style={card}>
+        <div style={card()}>
           <ChartTitle>Top afiliados (indicações)</ChartTitle>
           <Table
             cols={['Afiliado', 'Código', 'Indicados']}
@@ -521,7 +521,7 @@ function Financeiro() {
             ])}
           />
         </div>
-        <div style={card}>
+        <div style={card()}>
           <ChartTitle>Comissões recentes</ChartTitle>
           <Table
             cols={['Afiliado', 'Valor', '%', 'Período']}
@@ -529,7 +529,7 @@ function Financeiro() {
           />
         </div>
       </div>
-      <div style={card}>
+      <div style={card()}>
         <ChartTitle>Assinaturas</ChartTitle>
         <Table
           cols={['Usuário', 'Status', 'Valor', 'Próx. cobrança', 'Criada']}
