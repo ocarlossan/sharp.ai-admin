@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
 import { api, token } from './api';
-import { T, CHART_COLORS } from './theme';
+import { T, CHART_COLORS, applyThemeMode, ThemeMode } from './theme';
 
 // ─── Login ──────────────────────────────────────────────────────────
 function Login({ onLogin }: { onLogin: () => void }) {
@@ -90,7 +90,7 @@ const TABS = [
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
 ] as const;
 
-function Shell() {
+function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) => void }) {
   const [tab, setTab] = useState<string>('dashboard');
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -110,8 +110,21 @@ function Shell() {
             <span style={{ fontSize: 15 }}>{t.icon}</span>{t.label}
           </button>
         ))}
+        {/* Aparência: claro / escuro */}
+        <div style={{ marginTop: 24 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: T.textDim, padding: '0 8px 8px' }}>APARÊNCIA</div>
+          <div style={{ display: 'flex', gap: 6, background: T.surface2, borderRadius: 8, padding: 3 }}>
+            {([['light', '☀︎ Claro'], ['dark', '☾ Escuro']] as const).map(([m, label]) => (
+              <button key={m} onClick={() => setTheme(m)} style={{
+                flex: 1, padding: '7px 6px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                background: mode === m ? T.surface : 'transparent',
+                color: mode === m ? T.accent : T.textMid,
+              }}>{label}</button>
+            ))}
+          </div>
+        </div>
         <button onClick={() => { token.clear(); location.reload(); }} style={{
-          display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', marginTop: 24,
+          display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', marginTop: 16,
           borderRadius: 9, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600,
           background: 'transparent', color: T.textDim,
         }}>↩ Sair</button>
@@ -536,5 +549,25 @@ function pagerBtn(disabled: boolean): React.CSSProperties {
 // ─── App ────────────────────────────────────────────────────────────
 export function App() {
   const [authed, setAuthed] = useState(!!token.get());
-  return authed ? <Shell /> : <Login onLogin={() => setAuthed(true)} />;
+  const [mode, setMode] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('sharp_admin_theme');
+    const m: ThemeMode = saved === 'light' || saved === 'dark' ? saved : 'dark';
+    applyThemeMode(m);
+    return m;
+  });
+  useEffect(() => {
+    document.body.style.background = T.bg;
+    document.body.style.color = T.text;
+  }, [mode]);
+  const setTheme = (m: ThemeMode) => {
+    applyThemeMode(m);
+    localStorage.setItem('sharp_admin_theme', m);
+    setMode(m);
+  };
+  // key={mode} força remount pra todas as telas relerem o T mutado.
+  return (
+    <div key={mode}>
+      {authed ? <Shell mode={mode} setTheme={setTheme} /> : <Login onLogin={() => setAuthed(true)} />}
+    </div>
+  );
 }
