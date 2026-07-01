@@ -90,53 +90,96 @@ const TABS = [
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
 ] as const;
 
+function useIsMobile() {
+  const [m, setM] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const on = () => setM(window.innerWidth < 768);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return m;
+}
+
 function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) => void }) {
   const [tab, setTab] = useState<string>('dashboard');
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const SidebarInner = ({ onNav }: { onNav: () => void }) => (
+    <aside style={{ width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, padding: 16, height: '100%', boxSizing: 'border-box', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, padding: '4px 8px' }}>
+        <Logo />
+        <span style={{ fontSize: 16, fontWeight: 800 }}>Sharp<span style={{ color: T.accent }}>Ai</span></span>
+        <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: T.accentSoft, padding: '2px 6px', borderRadius: 5 }}>ADMIN</span>
+      </div>
+      {TABS.map((t) => (
+        <button key={t.id} onClick={() => { setTab(t.id); onNav(); }} style={{
+          display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', marginBottom: 4,
+          borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, textAlign: 'left',
+          background: tab === t.id ? T.accentSoft : 'transparent',
+          color: tab === t.id ? T.accent : T.textMid,
+        }}>
+          <span style={{ fontSize: 15 }}>{t.icon}</span>{t.label}
+        </button>
+      ))}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: T.textDim, padding: '0 8px 8px' }}>APARÊNCIA</div>
+        <div style={{ display: 'flex', gap: 6, background: T.surface2, borderRadius: 8, padding: 3 }}>
+          {([['light', '☀︎ Claro'], ['dark', '☾ Escuro']] as const).map(([m, label]) => (
+            <button key={m} onClick={() => setTheme(m)} style={{
+              flex: 1, padding: '7px 6px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+              background: mode === m ? T.surface : 'transparent',
+              color: mode === m ? T.accent : T.textMid,
+            }}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <button onClick={() => { token.clear(); location.reload(); }} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '11px 12px', marginTop: 16,
+        borderRadius: 9, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+        background: 'transparent', color: T.textDim,
+      }}>↩ Sair</button>
+    </aside>
+  );
+
+  const content = (
+    <main style={{ flex: 1, minWidth: 0, padding: isMobile ? 16 : 32, overflowX: 'hidden' }}>
+      {tab === 'dashboard' && <Dashboard />}
+      {tab === 'precisao' && <Precisao />}
+      {tab === 'usuarios' && <Usuarios />}
+      {tab === 'bilhetes' && <Bilhetes />}
+      {tab === 'ia' && <DesempenhoIA />}
+      {tab === 'financeiro' && <Financeiro />}
+    </main>
+  );
+
+  if (isMobile) {
+    const tabLabel = TABS.find((t) => t.id === tab)?.label || 'Admin';
+    return (
+      <div style={{ minHeight: '100vh', background: T.bg }}>
+        {/* Top bar com hambúrguer */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+          <button onClick={() => setMenuOpen(true)} style={{ width: 38, height: 38, borderRadius: 9, border: `1px solid ${T.border}`, background: 'transparent', color: T.text, fontSize: 18, cursor: 'pointer' }}>☰</button>
+          <Logo />
+          <span style={{ fontSize: 15, fontWeight: 800 }}>Sharp<span style={{ color: T.accent }}>Ai</span></span>
+          <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: T.textMid }}>{tabLabel}</span>
+        </div>
+        {content}
+        {/* Gaveta lateral */}
+        {menuOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex' }}>
+            <div style={{ width: 240, height: '100%' }}><SidebarInner onNav={() => setMenuOpen(false)} /></div>
+            <div onClick={() => setMenuOpen(false)} style={{ flex: 1, background: 'rgba(0,0,0,0.45)' }} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <aside style={{ width: 220, background: T.surface, borderRight: `1px solid ${T.border}`, padding: 16, position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28, padding: '4px 8px' }}>
-          <Logo />
-          <span style={{ fontSize: 16, fontWeight: 800 }}>Sharp<span style={{ color: T.accent }}>Ai</span></span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: T.accentSoft, padding: '2px 6px', borderRadius: 5 }}>ADMIN</span>
-        </div>
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', marginBottom: 4,
-            borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, textAlign: 'left',
-            background: tab === t.id ? T.accentSoft : 'transparent',
-            color: tab === t.id ? T.accent : T.textMid,
-          }}>
-            <span style={{ fontSize: 15 }}>{t.icon}</span>{t.label}
-          </button>
-        ))}
-        {/* Aparência: claro / escuro */}
-        <div style={{ marginTop: 24 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: T.textDim, padding: '0 8px 8px' }}>APARÊNCIA</div>
-          <div style={{ display: 'flex', gap: 6, background: T.surface2, borderRadius: 8, padding: 3 }}>
-            {([['light', '☀︎ Claro'], ['dark', '☾ Escuro']] as const).map(([m, label]) => (
-              <button key={m} onClick={() => setTheme(m)} style={{
-                flex: 1, padding: '7px 6px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                background: mode === m ? T.surface : 'transparent',
-                color: mode === m ? T.accent : T.textMid,
-              }}>{label}</button>
-            ))}
-          </div>
-        </div>
-        <button onClick={() => { token.clear(); location.reload(); }} style={{
-          display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', marginTop: 16,
-          borderRadius: 9, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-          background: 'transparent', color: T.textDim,
-        }}>↩ Sair</button>
-      </aside>
-      <main style={{ flex: 1, padding: 32, overflow: 'auto' }}>
-        {tab === 'dashboard' && <Dashboard />}
-        {tab === 'precisao' && <Precisao />}
-        {tab === 'usuarios' && <Usuarios />}
-        {tab === 'bilhetes' && <Bilhetes />}
-        {tab === 'ia' && <DesempenhoIA />}
-        {tab === 'financeiro' && <Financeiro />}
-      </main>
+      <div style={{ position: 'sticky', top: 0, height: '100vh' }}><SidebarInner onNav={() => {}} /></div>
+      {content}
     </div>
   );
 }
