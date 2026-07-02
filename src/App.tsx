@@ -434,6 +434,7 @@ function Bilhetes() {
         {[
           { id: '', label: 'Todos' },
           { id: 'aberto', label: 'Aguardando' },
+          { id: 'em_andamento', label: 'Em andamento' },
           { id: 'bateu', label: 'Ganhou' },
           { id: 'nao_bateu', label: 'Perdeu' },
         ].map((s) => (
