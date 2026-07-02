@@ -89,6 +89,7 @@ const TABS = [
   { id: 'ia', label: 'Desempenho IA', icon: '◇' },
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
   { id: 'afiliados', label: 'Afiliados', icon: '⇄' },
+  { id: 'config', label: 'Config', icon: '⚙' },
 ] as const;
 
 function useIsMobile() {
@@ -152,6 +153,7 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
       {tab === 'ia' && <DesempenhoIA />}
       {tab === 'financeiro' && <Financeiro />}
       {tab === 'afiliados' && <Afiliados />}
+      {tab === 'config' && <Config />}
     </main>
   );
 
@@ -648,6 +650,56 @@ function Afiliados() {
         {(data.afiliados || []).length === 0 && (
           <div style={{ ...card(), textAlign: 'center', color: T.textDim, padding: 30 }}>Nenhum afiliado com indicações ainda.</div>
         )}
+      </div>
+    </>
+  );
+}
+
+// ─── Config: limites por plano ──────────────────────────────────────
+function Config() {
+  const { data, loading, reload } = useFetch<any>('/admin/limits');
+  const [horas, setHoras] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState('');
+  useEffect(() => { if (data) setHoras(String(data.freeCooldownHours ?? '')); }, [data]);
+  if (loading || !data) return <Loading />;
+
+  const salvar = async () => {
+    setSaving(true); setSavedMsg('');
+    try {
+      await api('/admin/limits', { method: 'PATCH', body: { freeCooldownHours: Number(horas) || 0 } });
+      setSavedMsg('Salvo! Vale para os próximos bilhetes.');
+      reload();
+    } catch (e: any) {
+      setSavedMsg('Erro ao salvar: ' + (e?.message || ''));
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <>
+      <H1>Configurações · Limites por plano</H1>
+      <div style={{ ...card(), maxWidth: 520 }}>
+        <div style={{ marginBottom: 6, fontSize: 14, fontWeight: 700 }}>Plano Free</div>
+        <div style={{ fontSize: 12, color: T.textMid, marginBottom: 14 }}>
+          Intervalo mínimo (em horas) entre um bilhete e o próximo para usuários do plano Free.
+          Ex: <b>3</b> = pode gerar 1 bilhete a cada 3 horas. <b>0</b> = sem limite.
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <input
+            type="number" min={0} value={horas}
+            onChange={(e) => setHoras(e.target.value)}
+            style={{ width: 100, padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 14 }}
+          />
+          <span style={{ fontSize: 13, color: T.textMid }}>horas entre bilhetes</span>
+          <button onClick={salvar} disabled={saving} style={{
+            padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: T.accent, color: '#fff', fontWeight: 700, fontSize: 13,
+          }}>{saving ? 'Salvando...' : 'Salvar'}</button>
+        </div>
+        {savedMsg && <div style={{ fontSize: 12, color: savedMsg.startsWith('Erro') ? T.red : T.green, marginTop: 4 }}>{savedMsg}</div>}
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.textMid }}>
+          <b>Plano Pro:</b> bilhetes ilimitados (sem cooldown).
+        </div>
       </div>
     </>
   );
