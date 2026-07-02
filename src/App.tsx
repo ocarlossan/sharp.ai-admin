@@ -658,17 +658,17 @@ function Afiliados() {
 // ─── Config: limites por plano ──────────────────────────────────────
 function Config() {
   const { data, loading, reload } = useFetch<any>('/admin/limits');
-  const [horas, setHoras] = useState<string>('');
+  const [limite, setLimite] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
-  useEffect(() => { if (data) setHoras(String(data.freeCooldownHours ?? '')); }, [data]);
+  useEffect(() => { if (data) setLimite(String(data.freeDailyLimit ?? '')); }, [data]);
   if (loading || !data) return <Loading />;
 
   const salvar = async () => {
     setSaving(true); setSavedMsg('');
     try {
-      await api('/admin/limits', { method: 'PATCH', body: { freeCooldownHours: Number(horas) || 0 } });
-      setSavedMsg('Salvo! Vale para os próximos bilhetes.');
+      await api('/admin/limits', { method: 'PATCH', body: { freeDailyLimit: Number(limite) || 0 } });
+      setSavedMsg('Salvo! Vale a partir de agora.');
       reload();
     } catch (e: any) {
       setSavedMsg('Erro ao salvar: ' + (e?.message || ''));
@@ -681,16 +681,16 @@ function Config() {
       <div style={{ ...card(), maxWidth: 520 }}>
         <div style={{ marginBottom: 6, fontSize: 14, fontWeight: 700 }}>Plano Free</div>
         <div style={{ fontSize: 12, color: T.textMid, marginBottom: 14 }}>
-          Intervalo mínimo (em horas) entre um bilhete e o próximo para usuários do plano Free.
-          Ex: <b>3</b> = pode gerar 1 bilhete a cada 3 horas. <b>0</b> = sem limite.
+          Quantos bilhetes um usuário do plano Free pode gerar <b>por dia</b>.
+          Ex: <b>3</b> = até 3 bilhetes por dia. <b>0</b> = ilimitado. (Reinicia à meia-noite, horário de Brasília.)
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <input
-            type="number" min={0} value={horas}
-            onChange={(e) => setHoras(e.target.value)}
+            type="number" min={0} value={limite}
+            onChange={(e) => setLimite(e.target.value)}
             style={{ width: 100, padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 14 }}
           />
-          <span style={{ fontSize: 13, color: T.textMid }}>horas entre bilhetes</span>
+          <span style={{ fontSize: 13, color: T.textMid }}>bilhetes por dia</span>
           <button onClick={salvar} disabled={saving} style={{
             padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
             background: T.accent, color: '#fff', fontWeight: 700, fontSize: 13,
@@ -698,7 +698,7 @@ function Config() {
         </div>
         {savedMsg && <div style={{ fontSize: 12, color: savedMsg.startsWith('Erro') ? T.red : T.green, marginTop: 4 }}>{savedMsg}</div>}
         <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.textMid }}>
-          <b>Plano Pro:</b> bilhetes ilimitados (sem cooldown).
+          <b>Plano Pro:</b> bilhetes ilimitados.
         </div>
       </div>
     </>
