@@ -431,11 +431,16 @@ function Bilhetes() {
     <>
       <H1>Bilhetes</H1>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {['', 'pendente', 'em_andamento', 'bateu', 'nao_bateu'].map((s) => (
-          <button key={s} onClick={() => { setStatus(s); setPage(1); }} style={{
+        {[
+          { id: '', label: 'Todos' },
+          { id: 'aberto', label: 'Aguardando' },
+          { id: 'bateu', label: 'Ganhou' },
+          { id: 'nao_bateu', label: 'Perdeu' },
+        ].map((s) => (
+          <button key={s.id} onClick={() => { setStatus(s.id); setPage(1); }} style={{
             padding: '7px 14px', borderRadius: 8, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            background: status === s ? T.accentSoft : 'transparent', color: status === s ? T.accent : T.textMid,
-          }}>{s === '' ? 'Todos' : STATUS_CFG[s]?.label}</button>
+            background: status === s.id ? T.accentSoft : 'transparent', color: status === s.id ? T.accent : T.textMid,
+          }}>{s.label}</button>
         ))}
       </div>
       {loading || !data ? <Loading /> : (
