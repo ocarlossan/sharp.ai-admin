@@ -88,6 +88,7 @@ const TABS = [
   { id: 'bilhetes', label: 'Bilhetes', icon: '▤' },
   { id: 'ia', label: 'Desempenho IA', icon: '◇' },
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
+  { id: 'afiliados', label: 'Afiliados', icon: '⇄' },
 ] as const;
 
 function useIsMobile() {
@@ -150,6 +151,7 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
       {tab === 'bilhetes' && <Bilhetes />}
       {tab === 'ia' && <DesempenhoIA />}
       {tab === 'financeiro' && <Financeiro />}
+      {tab === 'afiliados' && <Afiliados />}
     </main>
   );
 
@@ -581,6 +583,71 @@ function Financeiro() {
             new Date(s.createdAt).toLocaleDateString('pt-BR'),
           ])}
         />
+      </div>
+    </>
+  );
+}
+
+// ─── Afiliados ──────────────────────────────────────────────────────
+function Afiliados() {
+  const { data, loading } = useFetch<any>('/admin/affiliates');
+  const [openId, setOpenId] = useState<string | null>(null);
+  if (loading || !data) return <Loading />;
+  return (
+    <>
+      <H1>Afiliados</H1>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 16 }}>
+        <Stat label="Afiliados" value={data.totalAfiliados} />
+        <Stat label="Total de indicados" value={data.totalIndicados} color={T.accent} />
+        <Stat label="Comissões acumuladas" value={`R$ ${data.comissoesTotal}`} color={T.amber} />
+        <Stat label="Comissão por venda" value={`${data.pct}%`} color={T.green} />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {(data.afiliados || []).map((a: any) => {
+          const aberto = openId === a.id;
+          return (
+            <div key={a.id} style={{ ...card(), padding: 0, overflow: 'hidden' }}>
+              <div onClick={() => setOpenId(aberto ? null : a.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, cursor: 'pointer', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{a.name}</div>
+                  <div style={{ fontSize: 12, color: T.textMid }}>{a.email}{a.phone ? ` · ${a.phone}` : ''}</div>
+                  <div style={{ fontSize: 11, color: T.textDim, marginTop: 2 }}>Código: <code style={{ color: T.accent }}>{a.code}</code></div>
+                </div>
+                <div style={{ textAlign: 'center', minWidth: 70 }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: T.accent }}>{a.totalIndicados}</div>
+                  <div style={{ fontSize: 9, color: T.textDim, letterSpacing: 1 }}>INDICADOS</div>
+                </div>
+                <div style={{ textAlign: 'center', minWidth: 60 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: T.green }}>{a.pros}</div>
+                  <div style={{ fontSize: 9, color: T.textDim, letterSpacing: 1 }}>PRO</div>
+                </div>
+                <div style={{ textAlign: 'right', minWidth: 90 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: T.amber }}>R$ {a.comissaoAcumulada}</div>
+                  <div style={{ fontSize: 9, color: T.textDim, letterSpacing: 1 }}>COMISSÃO</div>
+                </div>
+                <span style={{ color: T.textDim, fontSize: 13 }}>{aberto ? '▲' : '▼'}</span>
+              </div>
+              {aberto && (
+                <div style={{ borderTop: `1px solid ${T.border}`, padding: 14, background: T.surface2 }}>
+                  <div style={{ fontSize: 11, color: T.textDim, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Indicados por {a.name}</div>
+                  <Table
+                    cols={['Nome', 'Email', 'Plano', 'Desde']}
+                    rows={(a.indicados || []).map((r: any) => [
+                      r.name,
+                      r.email,
+                      <Badge text={r.plan === 'pro' ? 'PRO' : 'Free'} color={r.plan === 'pro' ? T.green : T.textDim} />,
+                      new Date(r.since).toLocaleDateString('pt-BR'),
+                    ])}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {(data.afiliados || []).length === 0 && (
+          <div style={{ ...card(), textAlign: 'center', color: T.textDim, padding: 30 }}>Nenhum afiliado com indicações ainda.</div>
+        )}
       </div>
     </>
   );
