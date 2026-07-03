@@ -242,6 +242,11 @@ function Dashboard() {
         <Stat label="Bilhetes" value={ov.totalTickets} sub={`${ov.ticketsPending} aguardando`} />
         <Stat label="Taxa de acerto" value={`${ov.winRate}%`} color={T.accent} sub={`${ov.ticketsWon}G · ${ov.ticketsLost}P`} />
       </div>
+      {/* Consumo das APIs — acima dos gráficos */}
+      <div style={{ marginBottom: 18 }}>
+        <ChartTitle>Consumo das APIs</ChartTitle>
+        <ApiUsagePanel />
+      </div>
       {ch && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div style={card()}>
@@ -289,11 +294,6 @@ function Dashboard() {
           </div>
         </div>
       )}
-      {/* Consumo das APIs (embaixo do dashboard) */}
-      <div style={{ marginTop: 20 }}>
-        <ChartTitle>Consumo das APIs</ChartTitle>
-        <ApiUsagePanel />
-      </div>
     </>
   );
 }
