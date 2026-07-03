@@ -86,6 +86,7 @@ const TABS = [
   { id: 'precisao', label: 'Precisão', icon: '◔' },
   { id: 'usuarios', label: 'Usuários', icon: '☰' },
   { id: 'bilhetes', label: 'Bilhetes', icon: '▤' },
+  { id: 'bilhetedia', label: 'Bilhete do Dia', icon: '★' },
   { id: 'ia', label: 'Desempenho IA', icon: '◇' },
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
   { id: 'afiliados', label: 'Afiliados', icon: '⇄' },
@@ -150,6 +151,7 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
       {tab === 'precisao' && <Precisao />}
       {tab === 'usuarios' && <Usuarios />}
       {tab === 'bilhetes' && <Bilhetes />}
+      {tab === 'bilhetedia' && <BilheteDoDia />}
       {tab === 'ia' && <DesempenhoIA />}
       {tab === 'financeiro' && <Financeiro />}
       {tab === 'afiliados' && <Afiliados />}
@@ -662,6 +664,34 @@ function Afiliados() {
 }
 
 // ─── Config: limites por plano ──────────────────────────────────────
+function BilheteDoDia() {
+  const { data, loading } = useFetch<any>('/admin/daily-bets');
+  if (loading || !data) return <Loading />;
+  return (
+    <>
+      <H1>Bilhete do Dia · Acertividade da SharpAi</H1>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+        <Stat label="Taxa de acerto" value={`${data.taxa}%`} color={data.taxa >= 50 ? T.green : undefined} sub={`${data.ganhos} de ${data.ganhos + data.perdidos} resolvidos`} />
+        <Stat label="Gerados" value={data.total} />
+        <Stat label="Ganhos" value={data.ganhos} color={T.green} />
+        <Stat label="Perdidos" value={data.perdidos} color={T.red} />
+        <Stat label="Pendentes" value={data.pendentes} color={T.amber} />
+      </div>
+      <Table
+        cols={['Data', 'Jogo', 'Aposta', 'Odd', 'Edge', 'Status']}
+        rows={(data.lista || []).map((b: any) => [
+          b.date,
+          `${b.home} × ${b.away}`,
+          `${b.selecao} · ${b.mercado}`,
+          b.odd || '—',
+          b.edge != null ? `+${Math.round(b.edge * 100)}%` : '—',
+          <Badge text={STATUS_CFG[b.status]?.label || b.status} color={STATUS_CFG[b.status]?.color || T.textDim} />,
+        ])}
+      />
+    </>
+  );
+}
+
 function ApiUsagePanel() {
   const { data } = useFetch<any>('/admin/api-usage');
   const af = data?.apiFootball;
