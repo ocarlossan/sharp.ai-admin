@@ -86,7 +86,6 @@ const TABS = [
   { id: 'precisao', label: 'Precisão', icon: '◔' },
   { id: 'usuarios', label: 'Usuários', icon: '☰' },
   { id: 'bilhetes', label: 'Bilhetes', icon: '▤' },
-  { id: 'bilhetedia', label: 'Bilhete do Dia', icon: '★' },
   { id: 'ia', label: 'Desempenho IA', icon: '◇' },
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
   { id: 'afiliados', label: 'Afiliados', icon: '⇄' },
@@ -152,7 +151,6 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
       {tab === 'precisao' && <Precisao />}
       {tab === 'usuarios' && <Usuarios />}
       {tab === 'bilhetes' && <Bilhetes />}
-      {tab === 'bilhetedia' && <BilheteDoDia />}
       {tab === 'ia' && <DesempenhoIA />}
       {tab === 'financeiro' && <Financeiro />}
       {tab === 'afiliados' && <Afiliados />}
@@ -291,6 +289,11 @@ function Dashboard() {
           </div>
         </div>
       )}
+      {/* Consumo das APIs (embaixo do dashboard) */}
+      <div style={{ marginTop: 20 }}>
+        <ChartTitle>Consumo das APIs</ChartTitle>
+        <ApiUsagePanel />
+      </div>
     </>
   );
 }
@@ -353,9 +356,81 @@ function Precisao() {
 function precColor(p: number) { return p >= 60 ? T.green : p >= 40 ? T.amber : T.red; }
 
 // ─── Usuários ───────────────────────────────────────────────────────
+function UserEditModal({ id, onClose, onSaved }: { id: string; onClose: () => void; onSaved: () => void }) {
+  const { data } = useFetch<any>(`/admin/users/${id}`);
+  const [form, setForm] = useState<any>(null);
+  const [pwd, setPwd] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+  useEffect(() => { if (data && !form) setForm({ ...data }); }, [data]);
+  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 13, boxSizing: 'border-box' };
+  const salvar = async () => {
+    setSaving(true); setMsg('');
+    const body: any = { ...form }; if (pwd.trim()) body.password = pwd.trim();
+    try {
+      const r: any = await api(`/admin/users/${id}`, { method: 'PATCH', body });
+      if (r?.error) setMsg(r.error); else onSaved();
+    } catch (e: any) { setMsg('Erro: ' + (e?.message || '')); }
+    finally { setSaving(false); }
+  };
+  const campo = (label: string, key: string, ph = '') => (
+    <div style={{ flex: '1 1 45%', minWidth: 140 }}>
+      <div style={{ fontSize: 11, color: T.textMid, marginBottom: 3 }}>{label}</div>
+      <input value={form?.[key] || ''} placeholder={ph} onChange={(e) => set(key, e.target.value)} style={inp} />
+    </div>
+  );
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 50, overflowY: 'auto', padding: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ ...card(), width: 560, maxWidth: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ fontSize: 16, fontWeight: 800 }}>Editar usuário</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.textMid, fontSize: 18, cursor: 'pointer' }}>✕</button>
+        </div>
+        {!form ? <Loading /> : (
+          <>
+            <div style={{ fontSize: 11, color: T.textDim, fontWeight: 700, marginBottom: 8 }}>CADASTRO</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+              {campo('Nome', 'name')}
+              {campo('Email (acesso)', 'email')}
+              {campo('CPF', 'cpf')}
+              {campo('Telefone', 'phone')}
+              {campo('CEP', 'cep')}
+              {campo('Endereço', 'address')}
+              {campo('Número', 'numero')}
+              {campo('Bairro', 'bairro')}
+              {campo('Cidade', 'cidade')}
+              {campo('Estado', 'estado')}
+            </div>
+            <div style={{ fontSize: 11, color: T.textDim, fontWeight: 700, marginBottom: 8 }}>ACESSO</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ flex: '1 1 45%', minWidth: 140 }}>
+                <div style={{ fontSize: 11, color: T.textMid, marginBottom: 3 }}>Nova senha (emergência)</div>
+                <input value={pwd} placeholder="mín. 6 caracteres — em branco = mantém" onChange={(e) => setPwd(e.target.value)} style={inp} />
+              </div>
+              <div style={{ flex: '1 1 20%' }}>
+                <div style={{ fontSize: 11, color: T.textMid, marginBottom: 3 }}>Plano</div>
+                <select value={form.plan} onChange={(e) => set('plan', e.target.value)} style={{ ...inp }}>
+                  <option value="free">Free</option><option value="pro">Pro</option>
+                </select>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, marginTop: 16 }}>
+                <input type="checkbox" checked={!!form.isAdmin} onChange={(e) => set('isAdmin', e.target.checked)} /> Admin
+              </label>
+            </div>
+            <button onClick={salvar} disabled={saving} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: T.accent, color: '#fff', fontWeight: 700, fontSize: 13 }}>{saving ? 'Salvando...' : 'Salvar alterações'}</button>
+            {!!msg && <span style={{ fontSize: 12, color: T.red, marginLeft: 12 }}>{msg}</span>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Usuarios() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [editId, setEditId] = useState<string | null>(null);
   const { data, loading, reload } = useFetch<any>(`/admin/users?search=${encodeURIComponent(search)}&page=${page}`);
 
   async function toggle(id: string, field: 'plan' | 'isAdmin', value: any) {
@@ -382,8 +457,8 @@ function Usuarios() {
           <Table
             cols={['Usuário', 'Plano', 'Bilhetes', 'Indicados', 'Cadastro', 'Ações']}
             rows={data.users.map((u: any) => [
-              <div>
-                <div style={{ fontWeight: 600 }}>{u.name} {u.isAdmin && <Badge text="ADMIN" color={T.purple} />}</div>
+              <div onClick={() => setEditId(u.id)} style={{ cursor: 'pointer' }} title="Clique para editar">
+                <div style={{ fontWeight: 600, color: T.accent }}>{u.name} {u.isAdmin && <Badge text="ADMIN" color={T.purple} />}</div>
                 <div style={{ fontSize: 11, color: T.textDim }}>{u.email}</div>
               </div>,
               <select value={u.plan} onChange={(e) => toggle(u.id, 'plan', e.target.value)} style={selStyle()}>
@@ -400,6 +475,7 @@ function Usuarios() {
           <Pager page={page} total={data.total} perPage={data.perPage} onPage={setPage} />
         </div>
       )}
+      {editId && <UserEditModal id={editId} onClose={() => setEditId(null)} onSaved={() => { setEditId(null); reload(); }} />}
     </>
   );
 }
@@ -431,22 +507,36 @@ function Bilhetes() {
   const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
   const { data, loading } = useFetch<any>(`/admin/tickets?status=${status}&page=${page}`);
+  if (status === 'bilhetedia') {
+    return (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+          <H1>Bilhetes</H1>
+          <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 13, fontWeight: 600 }}>
+            <option value="">Todos</option>
+            <option value="aberto">Aguardando</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="bateu">Ganhou</option>
+            <option value="nao_bateu">Perdeu</option>
+            <option value="bilhetedia">★ Bilhete do Dia</option>
+          </select>
+        </div>
+        <BilheteDoDia />
+      </>
+    );
+  }
   return (
     <>
-      <H1>Bilhetes</H1>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {[
-          { id: '', label: 'Todos' },
-          { id: 'aberto', label: 'Aguardando' },
-          { id: 'em_andamento', label: 'Em andamento' },
-          { id: 'bateu', label: 'Ganhou' },
-          { id: 'nao_bateu', label: 'Perdeu' },
-        ].map((s) => (
-          <button key={s.id} onClick={() => { setStatus(s.id); setPage(1); }} style={{
-            padding: '7px 14px', borderRadius: 8, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            background: status === s.id ? T.accentSoft : 'transparent', color: status === s.id ? T.accent : T.textMid,
-          }}>{s.label}</button>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <H1>Bilhetes</H1>
+        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 13, fontWeight: 600 }}>
+          <option value="">Todos</option>
+          <option value="aberto">Aguardando</option>
+          <option value="em_andamento">Em andamento</option>
+          <option value="bateu">Ganhou</option>
+          <option value="nao_bateu">Perdeu</option>
+          <option value="bilhetedia">★ Bilhete do Dia</option>
+        </select>
       </div>
       {loading || !data ? <Loading /> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -706,6 +796,7 @@ function Notificacoes() {
 
 function BilheteDoDia() {
   const { data, loading } = useFetch<any>('/admin/daily-bets');
+  const [openId, setOpenId] = useState<string | null>(null);
   if (loading || !data) return <Loading />;
   return (
     <>
@@ -717,17 +808,33 @@ function BilheteDoDia() {
         <Stat label="Perdidos" value={data.perdidos} color={T.red} />
         <Stat label="Pendentes" value={data.pendentes} color={T.amber} />
       </div>
-      <Table
-        cols={['Data', 'Jogo', 'Aposta', 'Odd', 'Edge', 'Status']}
-        rows={(data.lista || []).map((b: any) => [
-          b.date,
-          `${b.home} × ${b.away}`,
-          `${b.selecao} · ${b.mercado}`,
-          b.odd || '—',
-          b.edge != null ? `+${Math.round(b.edge * 100)}%` : '—',
-          <Badge text={STATUS_CFG[b.status]?.label || b.status} color={STATUS_CFG[b.status]?.color || T.textDim} />,
-        ])}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {(data.lista || []).map((b: any) => {
+          const aberto = openId === b.date;
+          return (
+            <div key={b.date} style={{ ...card(), padding: 0, overflow: 'hidden' }}>
+              <div onClick={() => setOpenId(aberto ? null : b.date)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, cursor: 'pointer' }}>
+                <div style={{ fontSize: 12, color: T.textDim, minWidth: 78 }}>{b.date}</div>
+                <div style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>{b.home} × {b.away}</div>
+                <Badge text={STATUS_CFG[b.status]?.label || b.status} color={STATUS_CFG[b.status]?.color || T.textDim} />
+                <span style={{ color: T.textDim, fontSize: 13 }}>{aberto ? '▲' : '▼'}</span>
+              </div>
+              {aberto && (
+                <div style={{ borderTop: `1px solid ${T.border}`, padding: 14, background: T.surface2, fontSize: 13 }}>
+                  <div style={{ marginBottom: 6, color: T.textMid }}>Competição: <b style={{ color: T.text }}>{b.competition || '—'}</b></div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+                    <div>Mercado: <b>{b.mercado}</b></div>
+                    <div>Aposta: <b style={{ color: T.accent }}>{b.selecao}</b></div>
+                    <div>Odd: <b>{b.odd || '—'}</b></div>
+                    <div>Chance do modelo: <b>{b.prob != null ? Math.round(b.prob * 100) + '%' : '—'}</b></div>
+                    <div>Edge: <b style={{ color: T.green }}>{b.edge != null ? '+' + Math.round(b.edge * 100) + '%' : '—'}</b></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }
@@ -757,8 +864,12 @@ function ApiUsagePanel() {
         <div style={{ fontSize: 12, color: T.textMid, fontWeight: 700, marginBottom: 6 }}>DeepSeek · saldo restante</div>
         {ds ? (
           <>
-            <div style={{ fontSize: 22, fontWeight: 900 }}>{ds.moeda === 'USD' ? '$' : ''}{ds.saldo} <span style={{ fontSize: 13, color: T.textMid }}>{ds.moeda}</span></div>
-            <div style={{ fontSize: 11, color: T.textDim, marginTop: 6 }}>{ds.disponivel ? 'conta ativa' : 'conta indisponível'}</div>
+            <div style={{ fontSize: 22, fontWeight: 900 }}>{ds.moeda === 'USD' ? '$' : ''}{ds.saldo?.toFixed ? ds.saldo.toFixed(2) : ds.saldo} <span style={{ fontSize: 13, color: T.textMid }}>{ds.moeda}</span></div>
+            {ds.pctRestante != null && bar(ds.pctRestante, ds.pctRestante < 15 ? T.red : ds.pctRestante < 40 ? T.amber : T.green)}
+            <div style={{ fontSize: 11, color: T.textDim, marginTop: 6 }}>
+              {ds.pctRestante != null ? `${ds.pctRestante}% do saldo` : ''}
+              {ds.gastoHoje != null ? `  ·  gasto hoje: $${ds.gastoHoje.toFixed(2)}` : ''}
+            </div>
           </>
         ) : <div style={{ fontSize: 12, color: T.textDim }}>indisponível</div>}
       </div>
@@ -788,7 +899,6 @@ function Config() {
   return (
     <>
       <H1>Planos de Assinaturas</H1>
-      <ApiUsagePanel />
       <div style={{ ...card(), maxWidth: 520 }}>
         <div style={{ marginBottom: 6, fontSize: 14, fontWeight: 700 }}>Plano Free</div>
         <div style={{ fontSize: 12, color: T.textMid, marginBottom: 14 }}>
