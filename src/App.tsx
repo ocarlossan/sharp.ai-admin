@@ -90,6 +90,7 @@ const TABS = [
   { id: 'ia', label: 'Desempenho IA', icon: '◇' },
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
   { id: 'afiliados', label: 'Afiliados', icon: '⇄' },
+  { id: 'notificacoes', label: 'Notificações', icon: '◔' },
   { id: 'config', label: 'Planos de Assinaturas', icon: '⚙' },
 ] as const;
 
@@ -155,6 +156,7 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
       {tab === 'ia' && <DesempenhoIA />}
       {tab === 'financeiro' && <Financeiro />}
       {tab === 'afiliados' && <Afiliados />}
+      {tab === 'notificacoes' && <Notificacoes />}
       {tab === 'config' && <Config />}
     </main>
   );
@@ -664,6 +666,44 @@ function Afiliados() {
 }
 
 // ─── Config: limites por plano ──────────────────────────────────────
+function Notificacoes() {
+  const { data, reload } = useFetch<any>('/admin/notifications');
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const [msg, setMsg] = useState('');
+  const enviar = async () => {
+    if (!title.trim() || !body.trim()) { setMsg('Preencha título e mensagem.'); return; }
+    setSending(true); setMsg('');
+    try {
+      await api('/admin/notifications', { method: 'POST', body: { title, body } });
+      setMsg('Enviada para todos os usuários!'); setTitle(''); setBody(''); reload();
+    } catch (e: any) { setMsg('Erro: ' + (e?.message || '')); }
+    finally { setSending(false); }
+  };
+  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 14, boxSizing: 'border-box' as const };
+  return (
+    <>
+      <H1>Notificações</H1>
+      <div style={{ ...card(), maxWidth: 560, marginBottom: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Enviar para todos os usuários (chega no sino)</div>
+        <input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, marginBottom: 10 }} />
+        <textarea placeholder="Mensagem" value={body} onChange={(e) => setBody(e.target.value)} rows={3} style={{ ...inputStyle, marginBottom: 10, resize: 'vertical' }} />
+        <button onClick={enviar} disabled={sending} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', background: T.accent, color: '#fff', fontWeight: 700, fontSize: 13 }}>{sending ? 'Enviando...' : 'Enviar notificação'}</button>
+        {!!msg && <div style={{ fontSize: 12, color: T.textMid, marginTop: 10 }}>{msg}</div>}
+      </div>
+      <Table
+        cols={['Data', 'Título', 'Mensagem']}
+        rows={(data?.list || []).map((n: any) => [
+          new Date(n.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+          n.title,
+          n.body,
+        ])}
+      />
+    </>
+  );
+}
+
 function BilheteDoDia() {
   const { data, loading } = useFetch<any>('/admin/daily-bets');
   if (loading || !data) return <Loading />;
