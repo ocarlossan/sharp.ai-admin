@@ -89,7 +89,7 @@ const TABS = [
   { id: 'ia', label: 'Desempenho IA', icon: '◇' },
   { id: 'financeiro', label: 'Financeiro', icon: '$' },
   { id: 'afiliados', label: 'Afiliados', icon: '⇄' },
-  { id: 'config', label: 'Config', icon: '⚙' },
+  { id: 'config', label: 'Planos de Assinaturas', icon: '⚙' },
 ] as const;
 
 function useIsMobile() {
@@ -662,6 +662,40 @@ function Afiliados() {
 }
 
 // ─── Config: limites por plano ──────────────────────────────────────
+function ApiUsagePanel() {
+  const { data } = useFetch<any>('/admin/api-usage');
+  const af = data?.apiFootball;
+  const ds = data?.deepseek;
+  const bar = (pct: number, color: string) => (
+    <div style={{ height: 8, borderRadius: 4, background: T.surface2, overflow: 'hidden', marginTop: 6 }}>
+      <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: color }} />
+    </div>
+  );
+  return (
+    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+      <div style={{ ...card(), flex: 1, minWidth: 240 }}>
+        <div style={{ fontSize: 12, color: T.textMid, fontWeight: 700, marginBottom: 6 }}>API-Football · consumo de hoje</div>
+        {af ? (
+          <>
+            <div style={{ fontSize: 22, fontWeight: 900 }}>{af.usados?.toLocaleString('pt-BR')} <span style={{ fontSize: 13, color: T.textMid }}>/ {af.limite?.toLocaleString('pt-BR')}</span></div>
+            {af.pct != null && bar(af.pct, af.pct > 85 ? T.red : af.pct > 60 ? T.amber : T.green)}
+            <div style={{ fontSize: 11, color: T.textDim, marginTop: 6 }}>{af.pct}% do dia · plano {af.plano}</div>
+          </>
+        ) : <div style={{ fontSize: 12, color: T.textDim }}>indisponível</div>}
+      </div>
+      <div style={{ ...card(), flex: 1, minWidth: 240 }}>
+        <div style={{ fontSize: 12, color: T.textMid, fontWeight: 700, marginBottom: 6 }}>DeepSeek · saldo restante</div>
+        {ds ? (
+          <>
+            <div style={{ fontSize: 22, fontWeight: 900 }}>{ds.moeda === 'USD' ? '$' : ''}{ds.saldo} <span style={{ fontSize: 13, color: T.textMid }}>{ds.moeda}</span></div>
+            <div style={{ fontSize: 11, color: T.textDim, marginTop: 6 }}>{ds.disponivel ? 'conta ativa' : 'conta indisponível'}</div>
+          </>
+        ) : <div style={{ fontSize: 12, color: T.textDim }}>indisponível</div>}
+      </div>
+    </div>
+  );
+}
+
 function Config() {
   const { data, loading, reload } = useFetch<any>('/admin/limits');
   const [limite, setLimite] = useState<string>('');
@@ -683,7 +717,8 @@ function Config() {
 
   return (
     <>
-      <H1>Configurações · Limites por plano</H1>
+      <H1>Planos de Assinaturas</H1>
+      <ApiUsagePanel />
       <div style={{ ...card(), maxWidth: 520 }}>
         <div style={{ marginBottom: 6, fontSize: 14, fontWeight: 700 }}>Plano Free</div>
         <div style={{ fontSize: 12, color: T.textMid, marginBottom: 14 }}>
