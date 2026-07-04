@@ -15,6 +15,13 @@ const dark = {
   amber: '#F59E0B',
   blue: '#3B82F6',
   purple: '#8B5CF6',
+  lime: '#C9F53B',
+  // Vibrante: gradientes verde→lima + glow (mesma linguagem do app)
+  gradHero: 'linear-gradient(135deg, #071410 0%, #0A3D2C 45%, #12A374 100%)',
+  gradBrand: 'linear-gradient(135deg, #0B6E4F 0%, #12A374 55%, #3FBF7F 100%)',
+  gradLime: 'linear-gradient(135deg, #0FA36F 0%, #7FD957 55%, #C9F53B 100%)',
+  glow: '0 8px 24px rgba(18,163,116,0.45)',
+  glowLime: '0 8px 26px rgba(201,245,59,0.4)',
 };
 
 const light: typeof dark = {
@@ -32,6 +39,12 @@ const light: typeof dark = {
   amber: '#D97706',
   blue: '#2563EB',
   purple: '#7C3AED',
+  lime: '#C9F53B',
+  gradHero: 'linear-gradient(135deg, #0A3D2C 0%, #0B6E4F 55%, #12A374 100%)',
+  gradBrand: 'linear-gradient(135deg, #0B6E4F 0%, #12A374 55%, #37BC7D 100%)',
+  gradLime: 'linear-gradient(135deg, #0FA36F 0%, #7FD957 55%, #C9F53B 100%)',
+  glow: '0 8px 24px rgba(18,163,116,0.30)',
+  glowLime: '0 8px 26px rgba(201,245,59,0.35)',
 };
 
 const PALETTES = { light, dark };

@@ -38,7 +38,9 @@ function Login({ onLogin }: { onLogin: () => void }) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <form onSubmit={submit} style={{ width: '100%', maxWidth: 380, background: T.surface, borderRadius: 16, padding: 32, border: `1px solid ${T.border}` }}>
+      <form onSubmit={submit} style={{ width: '100%', maxWidth: 380, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.glow }}>
+        <div style={{ height: 4, background: T.gradLime }} />
+        <div style={{ padding: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Logo />
           <span style={{ fontSize: 20, fontWeight: 800 }}>Sharp<span style={{ color: T.accent }}>Ai</span></span>
@@ -48,9 +50,10 @@ function Login({ onLogin }: { onLogin: () => void }) {
         <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="admin@sharpai.pro" />
         <Field label="Senha" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
         {error && <div style={{ color: T.red, fontSize: 13, marginBottom: 12 }}>{error}</div>}
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: T.accent, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+        <button type="submit" disabled={loading} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: T.gradBrand, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', opacity: loading ? 0.6 : 1, boxShadow: loading ? 'none' : T.glow }}>
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
+        </div>
       </form>
     </div>
   );
@@ -71,7 +74,7 @@ function Field({ label, type, value, onChange, placeholder }: any) {
 
 function Logo() {
   return (
-    <div style={{ width: 30, height: 30, borderRadius: 8, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: 30, height: 30, borderRadius: 8, background: T.gradBrand, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: T.glow }}>
       <svg width="18" height="18" viewBox="0 0 40 40">
         <polyline points="12,23 20,15 28,23" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
         <polyline points="12,30 20,22 28,30" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
@@ -118,9 +121,11 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
       {TABS.map((t) => (
         <button key={t.id} onClick={() => { setTab(t.id); onNav(); }} style={{
           display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', marginBottom: 4,
-          borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, textAlign: 'left',
-          background: tab === t.id ? T.accentSoft : 'transparent',
-          color: tab === t.id ? T.accent : T.textMid,
+          borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: tab === t.id ? 800 : 600, textAlign: 'left',
+          background: tab === t.id ? T.gradBrand : 'transparent',
+          color: tab === t.id ? '#fff' : T.textMid,
+          boxShadow: tab === t.id ? T.glow : 'none',
+          transition: 'background 0.15s',
         }}>
           <span style={{ fontSize: 15 }}>{t.icon}</span>{t.label}
         </button>
@@ -191,18 +196,22 @@ function Shell({ mode, setTheme }: { mode: ThemeMode; setTheme: (m: ThemeMode) =
 }
 
 // ─── Helpers de UI ──────────────────────────────────────────────────
-const card = (): React.CSSProperties => ({ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20 });
+const card = (): React.CSSProperties => ({ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, boxShadow: '0 4px 14px rgba(0,0,0,0.06)' });
 
 function H1({ children }: any) {
-  return <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 20 }}>{children}</h1>;
+  return <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 20, letterSpacing: -0.5 }}>{children}</h1>;
 }
 
 function Stat({ label, value, color, sub }: { label: string; value: string | number; color?: string; sub?: string }) {
+  const c = color || T.accent;
   return (
-    <div style={card()}>
-      <div style={{ fontSize: 11, color: T.textDim, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: color || T.text, marginTop: 6 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: T.textMid, marginTop: 2 }}>{sub}</div>}
+    <div style={{ ...card(), padding: 0, overflow: 'hidden' }}>
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${c}, ${c}55)` }} />
+      <div style={{ padding: 20 }}>
+        <div style={{ fontSize: 11, color: T.textDim, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{label}</div>
+        <div style={{ fontSize: 30, fontWeight: 900, color: color || T.text, marginTop: 6 }}>{value}</div>
+        {sub && <div style={{ fontSize: 12, color: T.textMid, marginTop: 2 }}>{sub}</div>}
+      </div>
     </div>
   );
 }
