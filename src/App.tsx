@@ -765,22 +765,38 @@ function Afiliados() {
 }
 
 // ─── Config: limites por plano ──────────────────────────────────────
+// Ambientes do app pra onde o botão (CTA) pode levar o usuário.
+const CTA_AMBIENTES = [
+  { key: 'planos', label: 'Planos / Seja Pro' },
+  { key: 'criar', label: 'Criar bilhete' },
+  { key: 'bilhetes', label: 'Meus bilhetes' },
+  { key: 'esportes', label: 'Jogos / Esportes' },
+  { key: 'afiliado', label: 'Indique e ganhe' },
+];
+const ambienteLabel = (k?: string) => CTA_AMBIENTES.find((a) => a.key === k)?.label || k || '';
+
 function Notificacoes() {
   const { data, reload } = useFetch<any>('/admin/notifications');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [ctaLabel, setCtaLabel] = useState('');
+  const [ctaTarget, setCtaTarget] = useState('planos');
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState('');
   const enviar = async () => {
     if (!title.trim() || !body.trim()) { setMsg('Preencha título e mensagem.'); return; }
     setSending(true); setMsg('');
     try {
-      await api('/admin/notifications', { method: 'POST', body: { title, body } });
-      setMsg('Enviada para todos os usuários!'); setTitle(''); setBody(''); reload();
+      await api('/admin/notifications', {
+        method: 'POST',
+        body: { title, body, ctaLabel: ctaLabel.trim() || undefined, ctaTarget: ctaLabel.trim() ? ctaTarget : undefined },
+      });
+      setMsg('Enviada para todos os usuários!'); setTitle(''); setBody(''); setCtaLabel(''); reload();
     } catch (e: any) { setMsg('Erro: ' + (e?.message || '')); }
     finally { setSending(false); }
   };
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface2, color: T.text, fontSize: 14, boxSizing: 'border-box' as const };
+  const hasCta = !!ctaLabel.trim();
   return (
     <>
       <H1>Notificações</H1>
@@ -788,15 +804,31 @@ function Notificacoes() {
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Enviar para todos os usuários (chega no sino)</div>
         <input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, marginBottom: 10 }} />
         <textarea placeholder="Mensagem" value={body} onChange={(e) => setBody(e.target.value)} rows={3} style={{ ...inputStyle, marginBottom: 10, resize: 'vertical' }} />
-        <button onClick={enviar} disabled={sending} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', background: T.accent, color: '#fff', fontWeight: 700, fontSize: 13 }}>{sending ? 'Enviando...' : 'Enviar notificação'}</button>
+
+        {/* Botão de ação (CTA) — opcional. Se preencher, escolhe pra onde leva. */}
+        <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 4, paddingTop: 12, marginBottom: 10 }}>
+          <label style={{ display: 'block', fontSize: 12, color: T.textMid, fontWeight: 600, marginBottom: 6 }}>Botão de ação (opcional)</label>
+          <input placeholder='Texto do botão (ex: "Veja mais")' value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} style={{ ...inputStyle, marginBottom: hasCta ? 10 : 0 }} />
+          {hasCta && (
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: T.textMid, fontWeight: 600, marginBottom: 6 }}>Levar o usuário para</label>
+              <select value={ctaTarget} onChange={(e) => setCtaTarget(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                {CTA_AMBIENTES.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+
+        <button onClick={enviar} disabled={sending} style={{ padding: '11px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', background: T.gradBrand, color: '#fff', fontWeight: 800, fontSize: 13, boxShadow: T.glow }}>{sending ? 'Enviando...' : 'Enviar notificação'}</button>
         {!!msg && <div style={{ fontSize: 12, color: T.textMid, marginTop: 10 }}>{msg}</div>}
       </div>
       <Table
-        cols={['Data', 'Título', 'Mensagem']}
+        cols={['Data', 'Título', 'Mensagem', 'Botão']}
         rows={(data?.list || []).map((n: any) => [
           new Date(n.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
           n.title,
           n.body,
+          n.ctaLabel ? `${n.ctaLabel} → ${ambienteLabel(n.ctaTarget)}` : '—',
         ])}
       />
     </>
