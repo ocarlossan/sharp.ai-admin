@@ -25,8 +25,16 @@ export async function api<T = any>(
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+  // TOKEN VENCIDO/INVÁLIDO (401): limpa e volta pro login em vez de deixar o app preso
+  // no "Carregando" (o gate só checa se EXISTE token, não se é válido → travava).
+  if (res.status === 401 && auth) {
+    token.clear();
+    if (typeof location !== 'undefined') location.reload();
+    throw new Error('Sessão expirada — faça login de novo.');
+  }
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data: any = null;
+  try { data = text ? JSON.parse(text) : null; } catch { /* resposta não-JSON (proxy/HTML) */ }
   if (!res.ok) {
     const msg = Array.isArray(data?.message) ? data.message.join(', ') : data?.message || `Erro ${res.status}`;
     throw new Error(msg);
