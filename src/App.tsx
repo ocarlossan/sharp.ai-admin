@@ -506,6 +506,16 @@ const STATUS_CFG: Record<string, { label: string; color: string }> = {
 // Cores do risco (iguais ao app)
 const RISK_COLORS: Record<string, string> = { conservador: '#16A34A', moderado: '#F59E0B', agressivo: '#EF4444' };
 const RISK_LABEL: Record<string, string> = { conservador: 'Conservador', moderado: 'Moderado', agressivo: 'Agressivo' };
+// Perfil do bilhete PELA REGRA (faixa da odd total; prop de jogador = Alternativos) — igual ao app.
+function perfilDoBilhete(t: any): { label: string; color: string } {
+  const odd = Number(t?.oddTotal) || 0;
+  const legs = (t?.entries || t?.selecoes || []) as any[];
+  const temProp = legs.some((e) => /jogador|chute no gol|\bdesarme|\+\s*\d[.,]5\s*(chute|falta|desarme)/i.test(`${e?.mercado || ''} ${e?.selecao || ''}`));
+  const key = temProp ? 'alternativos' : odd > 0 && odd < 3.2 ? 'seguro' : odd < 6.5 ? 'moderado' : 'agressivo';
+  const cor: any = { seguro: '#16A34A', moderado: '#F59E0B', agressivo: '#EF4444', alternativos: '#8B5CF6' };
+  const lab: any = { seguro: 'Seguro', moderado: 'Moderado', agressivo: 'Agressivo', alternativos: 'Alternativos' };
+  return { label: lab[key], color: cor[key] };
+}
 function tipoAposta(games: any[]): { label: string; color: string } {
   const live = (games || []).some((g: any) => g?.gameStatus === 'live');
   return live ? { label: '● Ao vivo', color: '#EF4444' } : { label: 'Pré-jogo', color: '#3B82F6' };
@@ -562,7 +572,7 @@ function Bilhetes() {
                     <div style={{ fontSize: 12, color: T.textMid, marginTop: 2 }}>{(t.games || []).map((g: any) => `${g.home} x ${g.away}`).join(' · ')}</div>
                     <div style={{ fontSize: 11, color: T.textDim, marginTop: 2 }}>{t.competition} · {new Date(t.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
-                  <Badge text={RISK_LABEL[t.risk] || t.risk} color={RISK_COLORS[t.risk] || T.textDim} />
+                  {(() => { const p = perfilDoBilhete(t); return <Badge text={p.label} color={p.color} />; })()}
                   <Badge text={tipo.label} color={tipo.color} />
                   <Badge text={STATUS_CFG[t.status]?.label || t.status} color={STATUS_CFG[t.status]?.color || T.textDim} />
                   <div style={{ textAlign: 'right', minWidth: 56 }}>
